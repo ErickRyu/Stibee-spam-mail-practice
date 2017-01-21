@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
@@ -12,66 +13,60 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 public class MailSender {
-	public static Set<String> usedKeyword;
-	public static List<List<Object>> spreadsheet;
+	final int SUBJECT_KEYWORDS_NUMBER = 3;
+	final int TEXT_KEYWORDS_NUMBER = 10;
 	
-	
-	public static void SendMail(List<List<Object>> values) {
-		spreadsheet = values;
+	Set<String> usedKeyword;
+	List<List<Object>> keywords;
+	List<List<Object>> recipents;
+	Properties props;
+
+	MailSender(List<List<Object>> keywords, List<List<Object>> recipents) {
+		this.keywords = keywords;
+		this.recipents = recipents;
 		usedKeyword = new HashSet<>();
-		final String username = "Input-Gmail-ID@gmail.com";
-		final String password = "Input-Password";
+	}
 
-		Properties props = new Properties();
-		props.put("mail.smtp.auth", "true");
-		props.put("mail.smtp.starttls.enable", "true");
-		props.put("mail.smtp.host", "smtp.gmail.com");
-		props.put("mail.smtp.port", "587");
-
-		Session session = Session.getInstance(props, new javax.mail.Authenticator() {
-			protected PasswordAuthentication getPasswordAuthentication() {
-				return new PasswordAuthentication(username, password);
-			}
-		});
-
+	public void SendMail() {
 		try {
-
-			Message message = new MimeMessage(session);
-			message.setFrom(new InternetAddress("from-email@gmail.com"));
-			message.setRecipients(Message.RecipientType.TO, InternetAddress.parse("Receiver-email@gmail.com"));
-
-			String subject = makeSubject();
-			String text = makeText();
+			Properties props = PropertyManager.getMailProperties();
 			
+			Session session = Session.getInstance(props, new javax.mail.Authenticator() {
+				protected PasswordAuthentication getPasswordAuthentication() {
+					return new PasswordAuthentication(props.getProperty("gmail"), props.getProperty("password"));
+
+				}
+			});
+
+			String subject = makeCombination(SUBJECT_KEYWORDS_NUMBER);
+			String text = makeCombination(TEXT_KEYWORDS_NUMBER);
+			
+			Message message = new MimeMessage(session);
+			message.setFrom(new InternetAddress(props.getProperty("gmail")));
 			message.setSubject(subject);
 			message.setText(text);
-//			message.setContent("<img src = 'http://blog.jinbo.net/attach/615/200937431.jpg'>", "text/html");
-			Transport.send(message);
+
+			for (List<Object> recipent : recipents) {
+				String to = (String) recipent.get(0);
+				message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
+				Transport.send(message);
+			}
 
 			System.out.println("Done");
 
 		} catch (MessagingException e) {
 			throw new RuntimeException(e);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
-	public static String makeSubject(){
+
+	public String makeCombination(int numOfKeywords) {
 		StringBuilder res = new StringBuilder();
-		for(int i = 0; i < 3; ){
-			int index = (int)(Math.random()*spreadsheet.size());
-			String keyword = (String)spreadsheet.get(index).get(0);
-			if(usedKeyword.add(keyword)){
-				res.append(keyword + " ");
-				i++;
-			}
-		}
-		return res.toString();
-	}
-	public static String makeText(){
-		StringBuilder res = new StringBuilder();
-		for(int i = 0; i < 10; ){
-			int index = (int)(Math.random()*spreadsheet.size());
-			String keyword = (String)spreadsheet.get(index).get(0);
-			if(usedKeyword.add(keyword)){
+		for (int i = 0; i < numOfKeywords;) {
+			int index = (int) (Math.random() * keywords.size());
+			String keyword = (String) keywords.get(index).get(0);
+			if (usedKeyword.add(keyword)) {
 				res.append(keyword + " ");
 				i++;
 			}
