@@ -1,5 +1,5 @@
-# Spam mail practice V0.2
-This project is a program that takes a title and text from Google Sheets and sends it out.
+# Spam mail practice V0.3
+It takes keywords and emails from Google Sheets and combinates keywords to make subject and text and sends them out.
 
 
 # Tutorials what I saw
@@ -13,3 +13,5 @@ This project is a program that takes a title and text from Google Sheets and sen
 * Follow google sheets java quickstart Step 1. You should download `client_secret.json` and store at `src/main/resources`
 * `$ gradle -q run`
 
+# Development Journal
+* [Development Journal - workflowy](https://workflowy.com/s/GS0s.GIfH18Wb9z)
