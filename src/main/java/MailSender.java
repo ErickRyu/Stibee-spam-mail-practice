@@ -15,7 +15,7 @@ import javax.mail.internet.MimeMessage;
 public class MailSender {
 	final int SUBJECT_KEYWORDS_NUMBER = 3;
 	final int TEXT_KEYWORDS_NUMBER = 10;
-	
+
 	Set<String> usedKeyword;
 	List<List<Object>> keywords;
 	List<List<Object>> recipents;
@@ -28,9 +28,10 @@ public class MailSender {
 	}
 
 	public void SendMail() {
+
 		try {
 			Properties props = PropertyManager.getMailProperties();
-			
+
 			Session session = Session.getInstance(props, new javax.mail.Authenticator() {
 				protected PasswordAuthentication getPasswordAuthentication() {
 					return new PasswordAuthentication(props.getProperty("gmail"), props.getProperty("password"));
@@ -40,7 +41,7 @@ public class MailSender {
 
 			String subject = makeCombination(SUBJECT_KEYWORDS_NUMBER);
 			String text = makeCombination(TEXT_KEYWORDS_NUMBER);
-			
+
 			Message message = new MimeMessage(session);
 			message.setFrom(new InternetAddress(props.getProperty("gmail")));
 			message.setSubject(subject);
@@ -53,7 +54,6 @@ public class MailSender {
 			}
 
 			System.out.println("Done");
-
 		} catch (MessagingException e) {
 			throw new RuntimeException(e);
 		} catch (IOException e) {

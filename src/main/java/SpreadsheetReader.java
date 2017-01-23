@@ -19,20 +19,21 @@ import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.ValueRange;
 
 public class SpreadsheetReader {
-    private static final String APPLICATION_NAME =
-            "Stibee Homework by Ryu sungjin";
-	private static final java.io.File DATA_STORE_DIR = new java.io.File(System.getProperty("user.home"),
+	private final String APPLICATION_NAME = "Stibee Homework by Ryu sungjin";
+	private final java.io.File DATA_STORE_DIR = new java.io.File(System.getProperty("user.home"),
 			".credentials/stibeeHW");
 
-	private static FileDataStoreFactory DATA_STORE_FACTORY;
+	private FileDataStoreFactory DATA_STORE_FACTORY;
 
-	private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
+	private final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
 
-	private static HttpTransport HTTP_TRANSPORT;
+	private HttpTransport HTTP_TRANSPORT;
 
-	private static final List<String> SCOPES = Arrays.asList(SheetsScopes.SPREADSHEETS_READONLY);
+	private final List<String> SCOPES = Arrays.asList(SheetsScopes.SPREADSHEETS_READONLY);
 
-	static {
+	private Credential CREDENTIAL;
+
+	{
 		try {
 			HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
 			DATA_STORE_FACTORY = new FileDataStoreFactory(DATA_STORE_DIR);
@@ -42,7 +43,11 @@ public class SpreadsheetReader {
 		}
 	}
 
-	public static Credential authorize() throws IOException {
+	SpreadsheetReader() throws IOException {
+		authorize();
+	}
+
+	public Credential authorize() throws IOException {
 		// Load client secrets.
 		InputStream in = SpreadsheetReader.class.getResourceAsStream("/client_secret.json");
 		GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
@@ -52,16 +57,13 @@ public class SpreadsheetReader {
 				clientSecrets, SCOPES).setDataStoreFactory(DATA_STORE_FACTORY).setAccessType("offline").build();
 		Credential credential = new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize("user");
 		System.out.println("Credentials saved to " + DATA_STORE_DIR.getAbsolutePath());
+		CREDENTIAL = credential;
 		return credential;
 	}
 
-	public static Sheets getSheetsService() throws IOException {
-		Credential credential = authorize();
-		return new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential).setApplicationName(APPLICATION_NAME).build();
-	}
-
-	public static List<List<Object>> getValue(String spreadsheetId, String range) throws IOException {
-		Sheets service = getSheetsService();
+	public List<List<Object>> getValue(String spreadsheetId, String range) throws IOException {
+		Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, CREDENTIAL)
+				.setApplicationName(APPLICATION_NAME).build();
 		ValueRange response = service.spreadsheets().values().get(spreadsheetId, range).execute();
 		List<List<Object>> values = response.getValues();
 		if (values == null || values.size() == 0) {
